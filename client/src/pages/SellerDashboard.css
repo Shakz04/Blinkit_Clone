@@ -1,0 +1,144 @@
+.seller-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.seller-main {
+  padding: 2rem 0;
+}
+
+.seller-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.seller-welcome {
+  margin: 0 0 2rem;
+  color: #6b7280;
+}
+
+.add-product-section,
+.my-products-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+}
+
+.add-product-section h2,
+.my-products-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.product-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-row input,
+.form-row select {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.product-form textarea {
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+}
+
+.product-form input:focus,
+.product-form select:focus,
+.product-form textarea:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+.form-error {
+  color: #ef4444;
+  margin: 0;
+}
+
+.product-form button {
+  padding: 0.75rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.product-form button:hover:not(:disabled) {
+  background: #059669;
+}
+
+.product-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.empty-msg {
+  color: #6b7280;
+  margin: 0;
+}
+
+.seller-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.seller-product-card {
+  background: #f9fafb;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.seller-product-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.seller-product-info {
+  padding: 0.75rem;
+}
+
+.seller-product-info h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+}
+
+.seller-product-info p {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.category-badge {
+  display: inline-block;
+  background: #10b981;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}

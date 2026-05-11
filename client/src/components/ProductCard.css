@@ -1,0 +1,137 @@
+.product-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-image-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  background: #f9fafb;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.product-info {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.product-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-unit {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.product-price-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.original-price {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.add-btn {
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.add-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.add-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 2px solid #10b981;
+  background: white;
+  color: #10b981;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.qty-btn:hover {
+  background: #10b981;
+  color: white;
+}
+
+.qty-value {
+  font-weight: 700;
+  min-width: 1.5rem;
+  text-align: center;
+}

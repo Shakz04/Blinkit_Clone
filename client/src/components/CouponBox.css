@@ -1,0 +1,84 @@
+.coupon-box {
+  margin: 1rem 0;
+}
+
+.coupon-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.coupon-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+.coupon-form button {
+  padding: 0.5rem 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.coupon-form button:hover:not(:disabled) {
+  background: #059669;
+}
+
+.coupon-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.coupon-error {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+  width: 100%;
+}
+
+.coupon-applied {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #ecfdf5;
+  border-radius: 8px;
+  border: 1px solid #10b981;
+}
+
+.coupon-code {
+  font-weight: 600;
+  color: #059669;
+}
+
+.coupon-discount {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.coupon-remove {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.coupon-remove:hover {
+  color: #ef4444;
+  text-decoration: underline;
+}

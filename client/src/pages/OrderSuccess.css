@@ -1,0 +1,89 @@
+.success-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.success-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 2rem;
+}
+
+.success-card {
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  max-width: 460px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 auto 1.5rem;
+}
+
+.success-card h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.success-card p {
+  margin: 0 0 1rem;
+  color: #6b7280;
+}
+
+.success-card .amount {
+  font-weight: 700;
+  color: #10b981;
+  font-size: 1.1rem;
+}
+
+.success-card .payment-method {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.success-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.success-card .shop-btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #10b981;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.success-card .shop-btn:hover {
+  background: #059669;
+}
+
+.success-card .shop-btn.outline {
+  background: transparent;
+  border: 2px solid #10b981;
+  color: #10b981;
+}
+
+.success-card .shop-btn.outline:hover {
+  background: #ecfdf5;
+}

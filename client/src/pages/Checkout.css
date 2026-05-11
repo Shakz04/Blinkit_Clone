@@ -1,0 +1,149 @@
+.checkout-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+.checkout-main {
+  padding: 2rem 0;
+}
+
+.checkout-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.checkout-empty h2 {
+  margin: 0 0 1rem;
+  color: #1f2937;
+}
+
+.checkout-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.checkout-layout {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .checkout-layout {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+.checkout-form {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.address-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.form-grid input {
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.form-grid input:focus {
+  outline: none;
+  border-color: #10b981;
+}
+
+.form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.checkout-summary {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+  position: sticky;
+  top: 100px;
+}
+
+.checkout-summary h3 {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.summary-items {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.summary-row.discount .discount-amount {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.summary-row.total {
+  font-weight: 700;
+  font-size: 1.2rem;
+  border-top: 2px solid #e5e7eb;
+  padding-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.checkout-error {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+.pay-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.pay-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.pay-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  color: #10b981;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}

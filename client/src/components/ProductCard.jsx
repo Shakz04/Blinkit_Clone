@@ -37,15 +37,15 @@ export default function ProductCard({ product }) {
         <h3 className="product-name">{product.name}</h3>
         <span className="product-unit">{product.unit}</span>
         <div className="product-price-row">
-          <span className="price">₹{product.price}</span>
+          <span className="price">Rs.{product.price}</span>
           {product.originalPrice > product.price && (
-            <span className="original-price">₹{product.originalPrice}</span>
+            <span className="original-price">Rs.{product.originalPrice}</span>
           )}
         </div>
         {inCart ? (
           <div className="qty-controls">
             <button onClick={handleDec} className="qty-btn" aria-label="Decrease">
-              −
+              -
             </button>
             <span className="qty-value">{cartItem.quantity}</span>
             <button onClick={handleInc} className="qty-btn" aria-label="Increase">
@@ -58,7 +58,7 @@ export default function ProductCard({ product }) {
             disabled={adding}
             className="add-btn"
           >
-            {adding ? 'Adding...' : 'Add'}
+            {adding ? 'Adding...' : 'ADD'}
           </button>
         )}
       </div>

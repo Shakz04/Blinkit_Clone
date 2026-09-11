@@ -4,10 +4,9 @@ import User from '../models/User.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'blinkit_secret_key';
 
 const generateToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'blinkit_secret_key', { expiresIn: '7d' });
 };
 
 // Register

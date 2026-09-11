@@ -1,21 +1,18 @@
 import './CategoryTabs.css';
 
 export default function CategoryTabs({ categories, active, onSelect }) {
+  const labels = ['all', ...categories];
+
   return (
     <div className="category-tabs">
-      <button
-        className={`category-tab ${active === 'all' ? 'active' : ''}`}
-        onClick={() => onSelect('all')}
-      >
-        All
-      </button>
-      {categories.map((cat) => (
+      {labels.map((cat) => (
         <button
           key={cat}
           className={`category-tab ${active === cat ? 'active' : ''}`}
           onClick={() => onSelect(cat)}
         >
-          {cat}
+          <span className="category-icon" aria-hidden="true">{cat === 'all' ? 'A' : cat.slice(0, 1)}</span>
+          <span>{cat === 'all' ? 'All Products' : cat}</span>
         </button>
       ))}
     </div>

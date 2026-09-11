@@ -13,6 +13,7 @@ router.post('/', async (req, res) => {
     }
 
     const order = await Order.create({
+      razorpayOrderId: `direct_${Date.now()}_${Math.random().toString(36).slice(2)}`,
       sessionId: sessionId || 'guest',
       items: items.map((i) => ({
         product: i.product,

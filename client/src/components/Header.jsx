@@ -19,26 +19,29 @@ export default function Header({ onSearch, searchValue }) {
     <header className="header">
       <div className="header-inner">
         <Link to="/" className="logo">
-          <span className="logo-text">blinkit</span>
+          <span className="logo-mark" aria-hidden="true">B</span>
+          <span className="logo-text">FreshDash</span>
         </Link>
 
         <form className="search-bar" onSubmit={handleSearch}>
+          <span className="search-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </span>
           <input
             type="text"
-            placeholder="Search for products..."
+            placeholder="Search for groceries..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             className="search-input"
           />
-          <button type="submit" className="search-btn" aria-label="Search">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-          </button>
+          <button type="submit" className="search-btn">Search</button>
         </form>
 
         <div className="header-actions">
+          <span className="delivery-chip">Delivery in 10 mins</span>
           {user ? (
             <div className="user-menu-wrap">
               <button
@@ -46,7 +49,8 @@ export default function Header({ onSearch, searchValue }) {
                 onClick={() => setShowMenu(!showMenu)}
                 aria-expanded={showMenu}
               >
-                {user.name}
+                <span className="user-avatar" aria-hidden="true">U</span>
+                <span className="user-name">{user.name}</span>
                 {user.role === 'seller' && <span className="role-tag">Seller</span>}
               </button>
               {showMenu && (
@@ -75,6 +79,7 @@ export default function Header({ onSearch, searchValue }) {
               <circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
+            <span className="cart-label">Cart</span>
             <span className="cart-count">{cartCount}</span>
           </Link>
         </div>

@@ -1,181 +1,43 @@
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
-function authHeaders(token) {
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-}
-
-// Auth
-export async function register(name, email, password, role = 'user') {
-  const res = await fetch(`${API_BASE}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password, role }),
+async function request(path, { method = 'GET', body, token = localStorage.getItem('blinkit_token'), signal } = {}) {
+  const response = await fetch(API_BASE + path, {
+    method, signal,
+    headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Registration failed');
-  }
-  return res.json();
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Unable to complete this request. Please try again.');
+  return data;
 }
-
-export async function login(email, password) {
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Login failed');
-  }
-  return res.json();
-}
-
-export async function getMe(token) {
-  const res = await fetch(`${API_BASE}/auth/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error('Not authenticated');
-  return res.json();
-}
-
-// Products
-export async function getProducts(category = '', search = '') {
-  const params = new URLSearchParams();
-  if (category) params.set('category', category);
-  if (search) params.set('search', search);
-  const res = await fetch(`${API_BASE}/products?${params}`);
-  if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json();
-}
-
-export async function getCategories() {
-  const res = await fetch(`${API_BASE}/products/categories`);
-  if (!res.ok) throw new Error('Failed to fetch categories');
-  return res.json();
-}
-
-export async function addProduct(token, product) {
-  const res = await fetch(`${API_BASE}/products`, {
-    method: 'POST',
-    headers: authHeaders(token),
-    body: JSON.stringify(product),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Failed to add product');
-  }
-  return res.json();
-}
-
-export async function getMyProducts(token) {
-  const res = await fetch(`${API_BASE}/products/seller/mine`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json();
-}
-
-// Coupons
-export async function validateCoupon(code, amount) {
-  const res = await fetch(`${API_BASE}/coupons/validate`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code, amount }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Invalid coupon');
-  }
-  return res.json();
-}
-
-export async function getCart(sessionId) {
-  const res = await fetch(`${API_BASE}/cart/${sessionId}`);
-  if (!res.ok) throw new Error('Failed to fetch cart');
-  return res.json();
-}
-
-export async function addToCart(sessionId, productId, quantity = 1) {
-  const res = await fetch(`${API_BASE}/cart/${sessionId}/items`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ productId, quantity }),
-  });
-  if (!res.ok) throw new Error('Failed to add to cart');
-  return res.json();
-}
-
-export async function updateCartItem(sessionId, productId, quantity) {
-  const res = await fetch(`${API_BASE}/cart/${sessionId}/items/${productId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ quantity }),
-  });
-  if (!res.ok) throw new Error('Failed to update cart');
-  return res.json();
-}
-
-export async function removeFromCart(sessionId, productId) {
-  const res = await fetch(`${API_BASE}/cart/${sessionId}/items/${productId}`, {
-    method: 'DELETE',
-  });
-  if (!res.ok) throw new Error('Failed to remove from cart');
-  return res.json();
-}
-
-export async function clearCart(sessionId) {
-  const res = await fetch(`${API_BASE}/cart/${sessionId}`, { method: 'DELETE' });
-  if (!res.ok) throw new Error('Failed to clear cart');
-  return res.json();
-}
-
-// Orders
-export async function placeOrder(sessionId, items, totalAmount, deliveryAddress) {
-  const res = await fetch(`${API_BASE}/orders`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, items, totalAmount, deliveryAddress }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Failed to place order');
-  }
-  return res.json();
-}
-
-export async function getOrders(sessionId) {
-  const res = await fetch(`${API_BASE}/orders/${sessionId}`);
-  if (!res.ok) throw new Error('Failed to fetch orders');
-  return res.json();
-}
-
-// Payment
-export async function createPaymentOrder(sessionId, amount, items, deliveryAddress) {
-  const res = await fetch(`${API_BASE}/payment/create-order`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, amount, items, deliveryAddress }),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Failed to create order');
-  }
-  return res.json();
-}
-
-export async function verifyPayment(paymentDetails) {
-  const res = await fetch(`${API_BASE}/payment/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(paymentDetails),
-  });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error || 'Verification failed');
-  }
-  return res.json();
-}
+const query = values => new URLSearchParams(Object.entries(values).filter(([, value]) => value !== '' && value != null)).toString();
+export const register = (name, email, password, role = 'user') => request('/auth/register', { method: 'POST', body: { name, email, password, role } });
+export const login = (email, password) => request('/auth/login', { method: 'POST', body: { email, password } });
+export const getMe = token => request('/auth/me', { token });
+export const updateProfile = body => request('/auth/me', { method: 'PUT', body });
+export const saveAddress = (body, id) => request('/auth/addresses' + (id ? '/' + id : ''), { method: id ? 'PUT' : 'POST', body });
+export const deleteAddress = id => request('/auth/addresses/' + id, { method: 'DELETE' });
+export const getProducts = (filters = {}, signal) => request('/products?' + query(filters), { signal });
+export const getProduct = id => request('/products/' + id);
+export const getCategories = () => request('/products/categories');
+export const getSeller = id => request('/sellers/' + id);
+export const updateStore = body => request('/sellers/me', { method: 'PUT', body });
+export const addProduct = (token, body) => request('/products', { method: 'POST', body, token });
+export const updateProduct = (id, body) => request('/products/' + id, { method: 'PUT', body });
+export const deleteProduct = id => request('/products/' + id, { method: 'DELETE' });
+export const getMyProducts = token => request('/products/seller/mine', { token });
+export const getReviews = id => request('/products/' + id + '/reviews');
+export const saveReview = (id, body) => request('/products/' + id + '/reviews', { method: 'POST', body });
+export const validateCoupon = (code, amount) => request('/coupons/validate', { method: 'POST', body: { code, amount } });
+export const getCart = sessionId => request('/cart/' + sessionId);
+export const mergeCart = sessionId => request('/cart/merge', { method: 'POST', body: { sessionId } });
+export const addToCart = (sessionId, productId, quantity, variantId = '') => request('/cart/' + sessionId + '/items', { method: 'POST', body: { productId, quantity, variantId } });
+export const updateCartItem = (sessionId, productId, quantity, variantId = '') => request('/cart/' + sessionId + '/items/' + productId, { method: 'PUT', body: { quantity, variantId } });
+export const removeFromCart = (sessionId, productId, variantId = '') => request('/cart/' + sessionId + '/items/' + productId + '?' + query({ variantId }), { method: 'DELETE' });
+export const clearCart = sessionId => request('/cart/' + sessionId, { method: 'DELETE' });
+export const placeOrder = body => request('/orders', { method: 'POST', body });
+export const getOrders = sessionId => request('/orders/' + sessionId);
+export const getSellerOrders = () => request('/orders/seller/mine');
+export const updateFulfillment = (id, body) => request('/orders/' + id + '/fulfillment', { method: 'PUT', body });
+export const createPaymentOrder = (sessionId, amount, items, deliveryAddress) => request('/payment/create-order', { method: 'POST', body: { sessionId, amount, items, deliveryAddress } });
+export const verifyPayment = body => request('/payment/verify', { method: 'POST', body });

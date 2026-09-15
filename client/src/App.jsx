@@ -12,7 +12,10 @@ import TrackOrders from './pages/TrackOrders';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SellerDashboard from './pages/SellerDashboard';
+import ProductDetails from './pages/ProductDetails';
+import Profile from './pages/Profile';
 import './App.css';
+import './Commerce.css';
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/stores/:sellerId" element={<Home />} />
+            <Route path="/products/:id" element={<ProductDetails />} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<ErrorBoundary><Cart /></ErrorBoundary>} />
             <Route path="/checkout" element={<ErrorBoundary><Checkout /></ErrorBoundary>} />
             <Route path="/order-success" element={<OrderSuccess />} />

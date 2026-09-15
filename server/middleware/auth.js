@@ -27,3 +27,5 @@ export const sellerOnly = (req, res, next) => {
   }
   next();
 };
+
+export const optionalAuth = (req, res, next) => req.headers.authorization ? protect(req, res, next) : next();

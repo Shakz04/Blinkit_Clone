@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext';
 import './CouponBox.css';
 
 export default function CouponBox() {
-  const { cartTotal, appliedCoupon, discountAmount, finalTotal, applyCoupon, removeCoupon } = useCart();
+  const { appliedCoupon, discountAmount, applyCoupon, removeCoupon } = useCart();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,19 +32,21 @@ export default function CouponBox() {
           <button type="button" onClick={removeCoupon} className="coupon-remove">Remove</button>
         </div>
       ) : (
-        <form onSubmit={handleApply} className="coupon-form">
+        <div className="coupon-form">
           <input
             type="text"
+            aria-label="Coupon code"
+            onKeyDown={(event) => { if (event.key === 'Enter') handleApply(event); }}
             placeholder="Enter coupon code"
             value={code}
             onChange={(e) => { setCode(e.target.value.toUpperCase()); setError(''); }}
             className="coupon-input"
           />
-          <button type="submit" disabled={loading || !code.trim()}>
+          <button type="button" onClick={handleApply} disabled={loading || !code.trim()}>
             {loading ? 'Applying...' : 'Apply'}
           </button>
           {error && <p className="coupon-error">{error}</p>}
-        </form>
+        </div>
       )}
     </div>
   );

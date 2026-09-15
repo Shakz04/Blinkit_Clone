@@ -25,7 +25,7 @@ BLinkit is a quick-commerce grocery delivery web app inspired by Blinkit. It let
 
 - User and seller registration.
 - Login with JWT-based authentication.
-- Product listing with category and search filters.
+- Product listing with a visual Shop by Category homepage and advanced filters/sorting revealed for active search results.
 - Product cards with price, original price, unit, discount, and stock information.
 - Stitch-inspired customer UI with sticky green header, visual category browsing, hero banner, and compact product grid.
 - Cart stored by `sessionId` with quantity updates.
@@ -39,7 +39,7 @@ BLinkit is a quick-commerce grocery delivery web app inspired by Blinkit. It let
 
 ## MVP Requirements
 
-- The home page must show in-stock products and allow category/search filtering.
+- The home page must show in-stock products and visual category browsing. Brand, price, availability, rating, discount, and sorting controls must appear only after a shopper submits a non-empty search.
 - The home page UI must follow the user's Stitch references as a template: dark green header, wide search, category browsing, and dense product cards.
 - Users must be able to add products to cart without a full page refresh.
 - Cart totals must update when quantities change.

@@ -52,7 +52,7 @@ BLinkit should feel fast, fresh, and practical. The interface should prioritize 
 - Use `1rem` horizontal padding on mobile and small desktop.
 - Use responsive CSS grid for product listings.
 - Use a 240px desktop category rail beside the main product catalog when space allows.
-- Use a category showcase row above the catalog for visual browsing.
+- Use a category showcase row above the catalog for visual browsing on the normal homepage and category views; hide it while search results are active.
 - Keep cards compact enough for fast scanning.
 - Keep repeated UI elements stable in size so hover or loading states do not shift layout.
 - Use sticky navigation for quick access to search, auth, and cart.
@@ -61,18 +61,23 @@ BLinkit should feel fast, fresh, and practical. The interface should prioritize 
 
 - Header: dark green gradient, sticky, wide white search field, delivery/profile/cart actions.
 - Product card: image, title, unit, price, discount, add-to-cart action.
+- Product card: show the seller name/logo first; make it a link to the seller storefront.
+- Seller storefront: compact brand header with logo, store name, description, filters, and seller-owned product grid.
+- Product details: two-column gallery and purchase panel on desktop, stacked on mobile, followed by reviews.
+- Customer profile: personal details beside a saved-address list on desktop, stacked on mobile.
+- Order tracking: separate fulfillment cards and timelines for each seller in an order.
 - Product card quantity state: convert ADD into a compact `- count +` stepper.
 - Category tabs: desktop vertical category rail with active outlined item; mobile horizontal scroller.
 - Cart rows: product summary, quantity controls, remove action.
 - Checkout form: concise address fields and payment/order CTA.
-- Seller portal: two-column layout with a direct product form and searchable inventory table.
+- Seller portal: dashboard summaries and tabs for product/inventory management, orders, and storefront identity.
 - Error boundary: friendly fallback instead of a blank page.
 
 ## Interaction
 
 - Buttons should have clear hover and disabled states.
 - Quantity controls should update immediately and preserve layout.
-- Search should feel lightweight and direct.
+- Search should feel lightweight and direct. Show advanced filtering and sorting only after the shopper submits a non-empty search; keep the default homepage focused on visual category browsing.
 - Forms should show validation close to the failed action.
 - Loading and empty states should be calm and brief.
 

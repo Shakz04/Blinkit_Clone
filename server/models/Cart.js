@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const cartItemSchema = new mongoose.Schema({
+  variantId: { type: String, default: '' },
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product',
@@ -24,6 +25,6 @@ const cartSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-}, { timestamps: true });
+}, { timestamps: true, optimisticConcurrency: true });
 
 export default mongoose.model('Cart', cartSchema);

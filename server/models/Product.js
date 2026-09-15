@@ -41,6 +41,20 @@ const productSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  brand: { type: String, default: '' },
+  images: [String],
+  ingredients: { type: String, default: '' },
+  nutrition: { type: String, default: '' },
+  stock: { type: Number, min: 0, default: null },
+  variants: [{
+    label: { type: String, required: true },
+    price: { type: Number, required: true, min: 0.01 },
+    stock: { type: Number, required: true, min: 0 },
+  }],
+  archived: { type: Boolean, default: false },
+  ratingAverage: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 },
+  soldCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);

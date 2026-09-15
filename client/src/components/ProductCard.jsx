@@ -1,67 +1,39 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import StoreBadge from './StoreBadge';
+import { currency } from '../lib/shop';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
-  const { addToCart, cart, updateQuantity, removeItem } = useCart();
-  const cartItem = cart.items?.find((i) => i.product?._id === product._id);
-  const inCart = !!cartItem;
-  const [adding, setAdding] = useState(false);
-
-  const handleAdd = async () => {
-    if (adding) return;
-    setAdding(true);
-    await addToCart(product._id, 1);
-    setAdding(false);
+  const { addToCart, cart, updateQuantity, removeItem, loading } = useCart();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const item = cart.items.find(entry => entry.product?._id === product._id && !entry.variantId);
+  const options = product.variants?.length > 0;
+  const action = async callback => {
+    setBusy(true); setError('');
+    const ok = await callback();
+    if (!ok) setError('Could not update the cart. Check stock and try again.');
+    setBusy(false);
   };
-
-  const handleInc = () => {
-    updateQuantity(product._id, (cartItem?.quantity || 0) + 1);
-  };
-
-  const handleDec = () => {
-    const qty = cartItem?.quantity || 0;
-    if (qty <= 1) removeItem(product._id);
-    else updateQuantity(product._id, qty - 1);
-  };
-
-  return (
-    <div className="product-card">
-      <div className="product-image-wrap">
-        <img src={product.image} alt={product.name} className="product-image" />
-        {product.discount > 0 && (
-          <span className="discount-badge">{product.discount}% OFF</span>
-        )}
-      </div>
-      <div className="product-info">
-        <h3 className="product-name">{product.name}</h3>
-        <span className="product-unit">{product.unit}</span>
-        <div className="product-price-row">
-          <span className="price">Rs.{product.price}</span>
-          {product.originalPrice > product.price && (
-            <span className="original-price">Rs.{product.originalPrice}</span>
-          )}
-        </div>
-        {inCart ? (
-          <div className="qty-controls">
-            <button onClick={handleDec} className="qty-btn" aria-label="Decrease">
-              -
-            </button>
-            <span className="qty-value">{cartItem.quantity}</span>
-            <button onClick={handleInc} className="qty-btn" aria-label="Increase">
-              +
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleAdd}
-            disabled={adding}
-            className="add-btn"
-          >
-            {adding ? 'Adding...' : 'ADD'}
-          </button>
-        )}
-      </div>
+  return <article className="product-card">
+    <Link to={'/products/' + product._id} className="product-image-wrap" aria-label={'View ' + product.name}>
+      <img src={product.image} alt={product.name} className="product-image" loading="lazy" />
+      {product.discount > 0 && <span className="discount-badge">{product.discount}% OFF</span>}
+    </Link>
+    <div className="product-info">
+      <StoreBadge seller={product.seller} />
+      <Link to={'/products/' + product._id} className="product-title-link"><h3 className="product-name">{product.name}</h3></Link>
+      <span className="product-unit">{product.brand ? product.brand + ' · ' : ''}{options ? product.variants.length + ' options' : product.unit}</span>
+      <span className="rating-line">{product.reviewCount ? '★ ' + product.ratingAverage.toFixed(1) + ' (' + product.reviewCount + ')' : 'No reviews yet'}</span>
+      <div className="product-price-row"><span className="price">{options ? 'From ' : ''}{currency(product.price)}</span>{product.originalPrice > product.price && <span className="original-price">{currency(product.originalPrice)}</span>}</div>
+      {!product.available ? <span className="stock-unavailable">Out of stock</span> : options ? <Link className="add-btn choose-options" to={'/products/' + product._id}>Choose option</Link> : item ? <div className="qty-controls">
+        <button className="qty-btn" aria-label={'Decrease ' + product.name} disabled={busy || loading} onClick={() => action(() => item.quantity === 1 ? removeItem(product._id) : updateQuantity(product._id, item.quantity - 1))}>−</button>
+        <span className="qty-value">{item.quantity}</span>
+        <button className="qty-btn" aria-label={'Increase ' + product.name} disabled={busy || loading || (product.stock != null && item.quantity >= product.stock)} onClick={() => action(() => updateQuantity(product._id, item.quantity + 1))}>+</button>
+      </div> : <button className="add-btn" disabled={busy || loading} onClick={() => action(() => addToCart(product._id))}>{busy ? 'Adding...' : 'ADD'}</button>}
+      {error && <small role="alert" className="text-error">{error}</small>}
     </div>
-  );
+  </article>;
 }

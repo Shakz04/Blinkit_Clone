@@ -10,6 +10,13 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'seller'],
     default: 'user',
   },
+  phone: { type: String, default: '' },
+  sellerProfile: {
+    name: { type: String, default: '' },
+    logo: { type: String, default: '' },
+    description: { type: String, default: '' },
+  },
+  addresses: [{ label: String, name: String, phone: String, address: String, city: String, pincode: String, isDefault: { type: Boolean, default: false } }],
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

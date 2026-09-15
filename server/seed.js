@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import Product from './models/Product.js';
 import Coupon from './models/Coupon.js';
+import { provisionFreshDashStore } from './lib/defaultStore.js';
 
 dotenv.config();
 
@@ -40,7 +41,12 @@ async function seed() {
     await Product.insertMany(products);
     await Coupon.deleteMany({});
     await Coupon.insertMany(coupons);
+    const freshDash = await provisionFreshDashStore();
     console.log(`✓ Seeded ${products.length} products, ${coupons.length} coupons`);
+    console.log(`✓ Assigned seeded products to ${freshDash.seller.email}`);
+    if (freshDash.createdPassword) {
+      console.log(`FreshDash temporary password: ${freshDash.createdPassword}`);
+    }
     process.exit(0);
   } catch (err) {
     console.error('Seed error:', err);

@@ -1,111 +1,83 @@
 import express from 'express';
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
+import { optionalAuth, protect } from '../middleware/auth.js';
+import { route, id, number, session, cartScope, fail } from '../lib/validation.js';
+import { selection } from '../lib/products.js';
 
 const router = express.Router();
+const populate = { path: 'items.product', populate: { path: 'seller', select: 'name sellerProfile' } };
+const getCart = scope => Cart.findOneAndUpdate({ sessionId: scope }, { $setOnInsert: { items: [] } }, { upsert: true, new: true });
+const same = (item, productId, variantId) => String(item.product) === productId && (item.variantId || '') === variantId;
 
-// Helper to get or create cart
-const getOrCreateCart = async (sessionId) => {
-  let cart = await Cart.findOne({ sessionId }).populate('items.product');
-  if (!cart) {
-    cart = await Cart.create({ sessionId, items: [] });
-  }
-  return cart;
-};
-
-// Get cart
-router.get('/:sessionId', async (req, res) => {
-  try {
-    const cart = await getOrCreateCart(req.params.sessionId);
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Add to cart
-router.post('/:sessionId/items', async (req, res) => {
-  try {
-    const { productId, quantity = 1 } = req.body;
-    if (!productId) return res.status(400).json({ error: 'Product ID required' });
-
-    const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
-
-    let cart = await Cart.findOne({ sessionId: req.params.sessionId });
-    if (!cart) cart = await Cart.create({ sessionId: req.params.sessionId, items: [] });
-
-    const existingIndex = cart.items.findIndex(
-      (i) => i.product.toString() === productId
-    );
-    if (existingIndex >= 0) {
-      cart.items[existingIndex].quantity += quantity;
-    } else {
-      cart.items.push({ product: productId, quantity });
+router.post('/merge', protect, route(async (req, res) => {
+  const guestId = session(req.body.sessionId);
+  const scope = 'user_' + req.user._id;
+  const cart = await getCart(scope);
+  // Removing the guest cart atomically makes repeated login requests idempotent.
+  const guest = await Cart.findOneAndDelete({ sessionId: guestId });
+  if (guest) {
+    try {
+      for (const item of guest.items) {
+        const product = await Product.findById(item.product);
+        let option;
+        try { option = selection(product, item.variantId); } catch { continue; }
+        const existing = cart.items.find(entry => same(entry, String(item.product), item.variantId || ''));
+        const quantity = Math.min((existing?.quantity || 0) + item.quantity, option.stock ?? 999, 999);
+        if (quantity < 1) continue;
+        if (existing) existing.quantity = quantity;
+        else cart.items.push({ product: item.product, variantId: item.variantId || '', quantity });
+      }
+      await cart.save();
+    } catch (error) {
+      await Cart.updateOne({ sessionId: guestId }, { $setOnInsert: { items: guest.items } }, { upsert: true });
+      throw error;
     }
-    cart.updatedAt = new Date();
-    await cart.save();
-
-    cart = await Cart.findById(cart._id).populate('items.product');
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
-
-// Update item quantity
-router.put('/:sessionId/items/:productId', async (req, res) => {
-  try {
-    const { quantity } = req.body;
-    if (quantity < 1) return res.status(400).json({ error: 'Quantity must be at least 1' });
-
-    const cart = await Cart.findOne({ sessionId: req.params.sessionId });
-    if (!cart) return res.status(404).json({ error: 'Cart not found' });
-
-    const item = cart.items.find((i) => i.product.toString() === req.params.productId);
-    if (!item) return res.status(404).json({ error: 'Item not in cart' });
-
-    item.quantity = quantity;
-    cart.updatedAt = new Date();
-    await cart.save();
-
-    const updated = await Cart.findById(cart._id).populate('items.product');
-    res.json(updated);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Remove from cart
-router.delete('/:sessionId/items/:productId', async (req, res) => {
-  try {
-    const cart = await Cart.findOne({ sessionId: req.params.sessionId });
-    if (!cart) return res.status(404).json({ error: 'Cart not found' });
-
-    cart.items = cart.items.filter((i) => i.product.toString() !== req.params.productId);
-    cart.updatedAt = new Date();
-    await cart.save();
-
-    const updated = await Cart.findById(cart._id).populate('items.product');
-    res.json(updated);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Clear cart
-router.delete('/:sessionId', async (req, res) => {
-  try {
-    const cart = await Cart.findOne({ sessionId: req.params.sessionId });
-    if (!cart) return res.json({ items: [], message: 'Cart already empty' });
-
-    cart.items = [];
-    cart.updatedAt = new Date();
-    await cart.save();
-    res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+  await Order.updateMany({ sessionId: guestId, user: null }, { $set: { user: req.user._id }, $unset: { sessionId: 1 } });
+  res.json(await cart.populate(populate));
+}));
+router.use(optionalAuth);
+router.get('/:sessionId', route(async (req, res) => res.json(await (await getCart(cartScope(req))).populate(populate))));
+router.post('/:sessionId/items', route(async (req, res) => {
+  const productId = id(req.body.productId, 'product');
+  const variantId = req.body.variantId ? id(req.body.variantId, 'option') : '';
+  const quantity = number(req.body.quantity ?? 1, 'quantity', 1, 999, true);
+  const product = await Product.findById(productId);
+  const option = selection(product, variantId);
+  const cart = await getCart(cartScope(req));
+  const existing = cart.items.find(item => same(item, productId, variantId));
+  const total = (existing?.quantity || 0) + quantity;
+  if (total > 999 || (option.stock != null && total > option.stock)) fail('Not enough stock for ' + product.name, 409);
+  if (existing) existing.quantity = total;
+  else cart.items.push({ product: productId, variantId, quantity });
+  await cart.save();
+  res.json(await cart.populate(populate));
+}));
+router.put('/:sessionId/items/:productId', route(async (req, res) => {
+  const productId = id(req.params.productId, 'product');
+  const variantId = req.body.variantId ? id(req.body.variantId, 'option') : '';
+  const quantity = number(req.body.quantity, 'quantity', 1, 999, true);
+  const product = await Product.findById(productId);
+  const option = selection(product, variantId);
+  if (option.stock != null && quantity > option.stock) fail('Not enough stock for ' + product.name, 409);
+  const cart = await getCart(cartScope(req));
+  const item = cart.items.find(entry => same(entry, productId, variantId));
+  if (!item) fail('Item not in cart', 404);
+  item.quantity = quantity;
+  await cart.save();
+  res.json(await cart.populate(populate));
+}));
+router.delete('/:sessionId/items/:productId', route(async (req, res) => {
+  const productId = id(req.params.productId, 'product');
+  const variantId = req.query.variantId ? id(req.query.variantId, 'option') : '';
+  const cart = await getCart(cartScope(req));
+  cart.items = cart.items.filter(item => !same(item, productId, variantId));
+  await cart.save();
+  res.json(await cart.populate(populate));
+}));
+router.delete('/:sessionId', route(async (req, res) => {
+  res.json(await Cart.findOneAndUpdate({ sessionId: cartScope(req) }, { $set: { items: [] } }, { new: true }) || { items: [] });
+}));
 export default router;

@@ -2,161 +2,56 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Header from '../components/Header';
 import CouponBox from '../components/CouponBox';
+import AddressFields from '../components/AddressFields';
 import { useCart } from '../context/CartContext';
-import { placeOrder } from '../api';
+import { useAuth } from '../context/AuthContext';
+import { placeOrder, saveAddress } from '../api';
+import { currency, itemOption, itemKey } from '../lib/shop';
 import './Checkout.css';
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { cart, discountAmount, finalTotal, sessionId, clearCart } = useCart();
-  const [address, setAddress] = useState({
-    name: '',
-    phone: '',
-    address: '',
-    city: '',
-    pincode: '',
-  });
-  const [loading, setLoading] = useState(false);
+  const { user, setUser } = useAuth();
+  const { cart, cartTotal, discountAmount, finalTotal, sessionId, clearCart, loading: cartLoading, appliedCoupon } = useCart();
+  const defaultAddress = user?.addresses?.find(entry => entry.isDefault) || user?.addresses?.[0];
+  const [address, setAddress] = useState(defaultAddress || { name: user?.name || '', phone: user?.phone || '', address: '', city: '', pincode: '' });
+  const [selectedAddress, setSelectedAddress] = useState(defaultAddress?._id || '');
+  const [saveToAccount, setSaveToAccount] = useState(false);
+  const [addressLabel, setAddressLabel] = useState('Home');
+  const [checkoutKey] = useState(() => crypto.randomUUID());
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-
-  const items = (cart.items || []).filter((item) => item?.product?._id);
-  const subtotal = items.reduce((sum, { product, quantity }) => sum + (product?.price || 0) * quantity, 0);
-
-  const handlePlaceOrder = async () => {
-    if (items.length === 0) {
-      setError('Your cart is empty');
-      return;
-    }
-
-    const { name, phone, address: addr, city, pincode } = address;
-    if (!name.trim() || !phone.trim() || !addr.trim() || !city.trim() || !pincode.trim()) {
-      setError('Please fill in all delivery details');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-
+  const invalid = cart.items.some(item => !itemOption(item).available);
+  const submit = async event => {
+    event.preventDefault(); setError('');
+    if (!cart.items.length || invalid) return setError('Update your cart before placing this order.');
+    setBusy(true);
     try {
-      const orderItems = items.map(({ product, quantity }) => ({
-        product: product._id,
-        name: product.name,
-        price: product.price,
-        quantity,
-      }));
-
-      await placeOrder(sessionId, orderItems, finalTotal, address);
-      await clearCart();
-      navigate('/order-success', {
-        state: {
-          amount: finalTotal,
-          paymentMethod: 'Cash on Delivery (COD)',
-        },
+      if (saveToAccount && user) {
+        setUser(await saveAddress({ ...address, label: addressLabel, isDefault: !user.addresses?.length }));
+        setSaveToAccount(false);
+      }
+      const order = await placeOrder({
+        sessionId, checkoutKey,
+        items: cart.items.map(item => ({ product: item.product._id, variantId: item.variantId || '', quantity: item.quantity })),
+        couponCode: appliedCoupon?.code || '', deliveryAddress: address,
       });
-    } catch (err) {
-      setError(err.message || 'Failed to place order');
-    } finally {
-      setLoading(false);
-    }
+      await clearCart();
+      navigate('/order-success', { replace: true, state: { amount: order.totalAmount, orderId: order._id, paymentMethod: 'Cash on Delivery (COD)' } });
+    } catch (err) { setError(err.message); }
+    finally { setBusy(false); }
   };
-
-  if (items.length === 0 && !loading) {
-    return (
-      <div className="checkout-page">
-        <Header />
-        <main className="checkout-main">
-          <div className="container checkout-empty">
-            <h2>Your cart is empty</h2>
-            <Link to="/" className="shop-btn">Add items to checkout</Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  return (
-    <div className="checkout-page">
-      <Header />
-      <main className="checkout-main">
-        <div className="container">
-          <h1 className="checkout-title">Checkout</h1>
-          <div className="checkout-layout">
-            <div className="checkout-form">
-              <section className="address-section">
-                <h2>Delivery Address</h2>
-                <div className="form-grid">
-                  <input
-                    type="text"
-                    placeholder="Full Name"
-                    value={address.name}
-                    onChange={(e) => setAddress({ ...address, name: e.target.value })}
-                  />
-                  <input
-                    type="tel"
-                    placeholder="Phone"
-                    value={address.phone}
-                    onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Address (House, Street)"
-                    value={address.address}
-                    onChange={(e) => setAddress({ ...address, address: e.target.value })}
-                    className="full-width"
-                  />
-                  <input
-                    type="text"
-                    placeholder="City"
-                    value={address.city}
-                    onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                  />
-                  <input
-                    type="text"
-                    placeholder="Pincode"
-                    value={address.pincode}
-                    onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
-                  />
-                </div>
-              </section>
-            </div>
-            <div className="checkout-summary">
-              <h3>Order Summary</h3>
-              <div className="summary-items">
-                {items.map(({ product, quantity }) => (
-                  <div key={product._id} className="summary-item">
-                    <span>{product.name} x {quantity}</span>
-                    <span>Rs.{product.price * quantity}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="summary-row">
-                <span>Subtotal</span>
-                <span>Rs.{subtotal}</span>
-              </div>
-              <CouponBox />
-              {discountAmount > 0 && (
-                <div className="summary-row discount">
-                  <span>Discount</span>
-                  <span className="discount-amount">-Rs.{discountAmount}</span>
-                </div>
-              )}
-              <div className="summary-row total">
-                <span>Total</span>
-                <span>Rs.{finalTotal}</span>
-              </div>
-              {error && <p className="checkout-error">{error}</p>}
-              <button
-                onClick={handlePlaceOrder}
-                disabled={loading}
-                className="pay-btn"
-              >
-                {loading ? 'Placing Order...' : `Place Order Rs.${finalTotal} (COD)`}
-              </button>
-              <Link to="/cart" className="back-link">{'<-'} Back to Cart</Link>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
+  return <><Header /><main className="container commerce-main"><h1>Checkout</h1>
+    {cartLoading ? <p role="status">Loading your cart...</p> : !cart.items.length && !busy ? <div className="panel empty"><h2>Your cart is empty</h2><Link className="button" to="/">Add items to checkout</Link></div> : <form className="checkout-layout" onSubmit={submit}>
+      <section className="panel"><h2>Delivery address</h2>
+        {!user && <p className="notice"><Link to="/login" state={{ from: '/checkout' }}>Sign in</Link> to use saved addresses and keep orders in your account, or continue as a guest.</p>}
+        <fieldset className="checkout-fields" disabled={busy}>
+          {user?.addresses?.length > 0 && <label className="saved-address-select">Use a saved address<select value={selectedAddress} onChange={event => { const selected = user.addresses.find(entry => entry._id === event.target.value); setSelectedAddress(event.target.value); setAddress(selected || { name: user.name, phone: user.phone || '', address: '', city: '', pincode: '' }); }}>{user.addresses.map(entry => <option key={entry._id} value={entry._id}>{entry.label} · {entry.address}, {entry.city}{entry.isDefault ? ' (Default)' : ''}</option>)}<option value="">Use another address</option></select></label>}
+          <AddressFields value={address} onChange={value => { setAddress(value); setSelectedAddress(''); }} />
+          {user && !selectedAddress && <><label className="checkbox-label"><input type="checkbox" checked={saveToAccount} onChange={event => setSaveToAccount(event.target.checked)} />Save this address for next time</label>{saveToAccount && <label className="saved-address-select">Address label<input required maxLength={30} value={addressLabel} onChange={event => setAddressLabel(event.target.value)} /></label>}</>}
+        </fieldset>
+      </section>
+      <aside className="checkout-summary"><h2>Order summary</h2><div className="summary-items">{cart.items.map(item => <div className="summary-item" key={itemKey(item)}><span>{item.product?.name} · {itemOption(item).unit} × {item.quantity}</span><span>{currency(itemOption(item).price * item.quantity)}</span></div>)}</div><div className="summary-row"><span>Subtotal</span><span>{currency(cartTotal)}</span></div><CouponBox />{discountAmount > 0 && <div className="summary-row discount"><span>Discount</span><span>−{currency(discountAmount)}</span></div>}<div className="summary-row total"><span>Total</span><span>{currency(finalTotal)}</span></div><p className="muted">Cash on delivery · You can track each seller’s delivery after placing your order.</p>{error && <p className="notice error" role="alert">{error}</p>}{invalid && <p className="notice error">Some items are unavailable. <Link to="/cart">Update your cart</Link>.</p>}<button className="pay-btn" disabled={busy || invalid}>{busy ? 'Placing order...' : 'Place order · ' + currency(finalTotal)}</button><Link className="back-link" to="/cart">← Back to cart</Link></aside>
+    </form>}
+  </main></>;
 }

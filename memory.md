@@ -16,11 +16,51 @@ This file records what has been created, what is currently being worked on, and 
 
 ## Current Work
 
-- Current prompt: Run the project locally after reporting an Atlas inactivity outage.
-- Current file being worked on: Local runtime verification and project memory.
-- Current status: Frontend and backend running locally; the configured Atlas database connected successfully.
+- Current prompt: Restore Shop by Category on the homepage and show sorting/filtering only after a product search.
+- Current status: Implementation and automated/browser verification complete; the project remains running locally.
 
 ## Update Log
+
+### 2026-09-15 (Homepage Categories and Search Tools)
+
+- Restored a responsive Shop by Category image row on the normal homepage, with active-category styling and a See all action.
+- Kept the category rail available for direct browsing while removing the advanced filter/sort panel from the unsearched homepage and category views.
+- Made brand, price, availability, rating, discount, and sorting controls appear only after a shopper submits a non-empty product search.
+- Starting a new search clears stale category/filter state; clearing the search returns to the normal category-first homepage.
+- Confirmed Bakery category browsing, a `biscuits` search, and Price: low to high selection in the running browser.
+- Verified frontend lint, production build, and all 14 backend commerce integration tests pass.
+
+### 2026-09-15 (FreshDash Operations)
+
+- Added an idempotent `npm run setup-freshdash` command and reusable provisioning service.
+- Added a dedicated FreshDash operations seller account without storing its password in repository files.
+- Assigned 20 existing ownerless products and migrated 7 existing order/tracking records in the configured database.
+- Verified the FreshDash seller can log in, owns all 20 products, sees all 7 migrated orders, and can see order `6aa92bc3f9c52e095ae178d4` at Confirmed in Manage Orders.
+- Updated seeding so future seeded products are assigned to the FreshDash seller automatically.
+- Added `npm run reset-freshdash-password` for controlled credential recovery.
+- Added integration coverage proving ownerless products and existing tracking records are claimed idempotently; all 14 integration checks pass.
+- Replaced the credential-like database value in `.env.example` with a safe local placeholder and documented optional FreshDash seller environment variables.
+
+### 2026-09-15 (Runtime)
+
+- Started the project with `npm run dev`.
+- Frontend is running at `http://localhost:5173/` and backend at `http://localhost:5000`.
+- Confirmed HTTP 200 responses from the frontend, backend health endpoint, Vite API proxy, and product catalog endpoint.
+- Removed a duplicate frontend process on port 5174, leaving one clean development instance.
+
+### 2026-09-15
+
+- Added seller storefront profiles with a seller/store name, logo, description, and public seller page.
+- Added clickable seller identity to each product card, product page, cart item, and delivery fulfillment.
+- Added product detail pages with image galleries, variants, stock status, ingredients, nutrition, and cart controls.
+- Added catalog filtering by brand, price, stock, rating, and discount, plus sorting and pagination.
+- Added customer profile editing, saved addresses, account-backed carts/orders, and guest-cart/order migration after login.
+- Added ratings, review photos, verified-purchase labels, review updates, and product rating summaries.
+- Replaced generated delivery data with seller-managed per-seller order stages, ETA, delivery partner, and customer timelines.
+- Expanded seller management with product add/edit/archive, image upload/URL input, variants, stock controls, orders, fulfillment updates, and dashboard summaries.
+- Hardened checkout so product prices, discounts, inventory, and seller ownership are calculated and checked on the server; duplicate submissions are idempotent and concurrent checkouts cannot oversell.
+- Added isolated integration tests covering seller permissions, profiles, product options, filters, address books, cart merging, checkout, stock reservations, reviews, and tracking.
+- Verified frontend lint, production build, 13 integration checks, desktop flows, mobile profile layout, storefront branding, pack-size cart behavior, saved-address checkout, and order tracking.
 
 ### 2026-09-11
 

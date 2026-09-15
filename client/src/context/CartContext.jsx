@@ -1,152 +1,94 @@
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+/* eslint-disable react-refresh/only-export-components -- This module exports its provider and shared context hook. */
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import * as api from '../api';
+import { useAuth } from './AuthContext';
+import { itemOption } from '../lib/shop';
 
 const CartContext = createContext();
-
-const COUPON_STORAGE = 'blinkit_coupon';
-const SESSION_STORAGE = 'blinkit_session';
-
-function getSessionId() {
-  try {
-    let id = localStorage.getItem(SESSION_STORAGE);
-    if (!id) {
-      id = 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-      localStorage.setItem(SESSION_STORAGE, id);
-    }
-    return id;
-  } catch {
-    return 'sess_guest_' + Date.now();
+const pending = new Map();
+function guestSession() {
+  let value = localStorage.getItem('blinkit_session');
+  if (!value || !/^sess_[A-Za-z0-9_-]{8,100}$/.test(value)) {
+    value = 'sess_' + crypto.randomUUID();
+    localStorage.setItem('blinkit_session', value);
   }
+  return value;
 }
-
-export function CartProvider({ children }) {
-  const sessionId = useMemo(getSessionId, []);
+function CartState({ user, authLoading, children }) {
+  const userId = user?._id;
+  const [sessionId] = useState(guestSession);
+  const couponKey = 'blinkit_coupon_' + (user?._id || sessionId);
   const [cart, setCart] = useState({ items: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(() => {
     try {
-      const stored = localStorage.getItem(COUPON_STORAGE);
-      const parsed = stored ? JSON.parse(stored) : null;
-      if (parsed && typeof parsed.discountPercent !== 'number') return null;
-      return parsed;
-    } catch {
-      return null;
-    }
+      const value = JSON.parse(localStorage.getItem(couponKey));
+      return typeof value?.discountPercent === 'number' ? value : null;
+    } catch { return null; }
   });
-
-  const refreshCart = async () => {
-    try {
-      const data = await api.getCart(sessionId);
-      setCart(data && typeof data === 'object' ? data : { items: [] });
-    } catch (err) {
-      setCart({ items: [] });
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  const queue = useRef(Promise.resolve());
   useEffect(() => {
-    refreshCart();
+    if (authLoading) return;
+    let cancelled = false;
+    const key = (userId || 'guest') + ':' + sessionId;
+    if (!pending.has(key)) {
+      const promise = userId ? api.mergeCart(sessionId) : api.getCart(sessionId);
+      pending.set(key, promise);
+      promise.finally(() => pending.delete(key)).catch(() => {});
+    }
+    pending.get(key).then(data => {
+      if (cancelled) return;
+      setCart(data);
+      if (userId) localStorage.setItem('blinkit_session', 'sess_' + crypto.randomUUID());
+    }).catch(err => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [authLoading, sessionId, userId]);
+  useEffect(() => {
+    if (appliedCoupon) localStorage.setItem(couponKey, JSON.stringify(appliedCoupon));
+    else localStorage.removeItem(couponKey);
+  }, [appliedCoupon, couponKey]);
+  const refreshCart = useCallback(async () => {
+    try { setCart(await api.getCart(sessionId)); setError(''); }
+    catch (err) { setError(err.message); }
   }, [sessionId]);
-
-  const addToCart = async (productId, quantity = 1) => {
-    try {
-      const data = await api.addToCart(sessionId, productId, quantity);
-      setCart(data);
-      return true;
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
-  };
-
-  const updateQuantity = async (productId, quantity) => {
-    if (quantity < 1) return;
-    try {
-      const data = await api.updateCartItem(sessionId, productId, quantity);
-      setCart(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const removeItem = async (productId) => {
-    try {
-      const data = await api.removeFromCart(sessionId, productId);
-      setCart(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  const mutate = useCallback(action => {
+    const result = queue.current.then(async () => {
+      try { setError(''); setCart(await action()); return true; }
+      catch (err) { setError(err.message); return false; }
+    });
+    queue.current = result;
+    return result;
+  }, []);
+  const addToCart = (id, quantity = 1, variantId = '') => mutate(() => api.addToCart(sessionId, id, quantity, variantId));
+  const updateQuantity = (id, quantity, variantId = '') => mutate(() => api.updateCartItem(sessionId, id, quantity, variantId));
+  const removeItem = (id, variantId = '') => mutate(() => api.removeFromCart(sessionId, id, variantId));
   const clearCart = async () => {
-    try {
-      await api.clearCart(sessionId);
-      setCart({ items: [] });
-    } catch (err) {
-      console.error(err);
-    }
+    const success = await mutate(() => api.clearCart(sessionId));
+    if (success) setAppliedCoupon(null);
+    return success;
   };
-
-  const cartCount = cart.items?.reduce((sum, i) => sum + i.quantity, 0) || 0;
-  const cartTotal = cart.items?.reduce((sum, i) => sum + (i.product?.price || 0) * i.quantity, 0) || 0;
-
-  const discountAmount = appliedCoupon?.discountPercent != null
-    ? Math.round((cartTotal * (appliedCoupon.discountPercent || 0)) / 100)
-    : 0;
-  const finalTotal = Math.max(0, cartTotal - discountAmount);
-
-  const applyCoupon = async (code) => {
+  const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const cartTotal = Math.round(cart.items.reduce((sum, item) => sum + itemOption(item).price * item.quantity, 0) * 100) / 100;
+  const discountAmount = appliedCoupon ? Math.round(cartTotal * appliedCoupon.discountPercent / 100) : 0;
+  const finalTotal = Math.max(0, Math.round((cartTotal - discountAmount) * 100) / 100);
+  const applyCoupon = async code => {
     const data = await api.validateCoupon(code, cartTotal);
-    const coupon = {
-      code: data.code,
-      discountPercent: data.discountPercent,
-      discountAmount: data.discountAmount,
-    };
-    setAppliedCoupon(coupon);
-    localStorage.setItem(COUPON_STORAGE, JSON.stringify(coupon));
+    setAppliedCoupon({ code: data.code, discountPercent: data.discountPercent });
   };
-
-  const removeCoupon = () => {
-    setAppliedCoupon(null);
-    localStorage.removeItem(COUPON_STORAGE);
-  };
-
-  // Clear coupon when cart is cleared
-  useEffect(() => {
-    if (cart.items?.length === 0) {
-      setAppliedCoupon(null);
-      localStorage.removeItem(COUPON_STORAGE);
-    }
-  }, [cart.items?.length]);
-
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        cartCount,
-        cartTotal,
-        appliedCoupon,
-        discountAmount,
-        finalTotal,
-        applyCoupon,
-        removeCoupon,
-        sessionId,
-        loading,
-        addToCart,
-        updateQuantity,
-        removeItem,
-        clearCart,
-        refreshCart,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={{
+    cart, cartCount, cartTotal, appliedCoupon, discountAmount, finalTotal, applyCoupon,
+    removeCoupon: () => setAppliedCoupon(null), sessionId, loading, error,
+    addToCart, updateQuantity, removeItem, clearCart, refreshCart,
+  }}>{children}</CartContext.Provider>;
 }
-
+export function CartProvider({ children }) {
+  const { user, loading } = useAuth();
+  return <CartState key={user?._id || 'guest'} user={user} authLoading={loading}>{children}</CartState>;
+}
 export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart must be used within CartProvider');
-  return ctx;
+  const context = useContext(CartContext);
+  if (!context) throw new Error('useCart must be used within CartProvider');
+  return context;
 }

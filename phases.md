@@ -23,6 +23,8 @@
 - Support filtering by product category.
 - Apply Stitch-inspired shopping UI: sticky dark green header, visual category showcase, desktop category rail, and compact product grid.
 - Show product details: name, image, unit, price, original price, discount, stock.
+- Provide product pages with galleries, pack-size variants, descriptions, ingredients, nutrition, seller links, and reviews.
+- Filter by brand, price, availability, rating, and discount; sort and paginate active search results while keeping the default homepage category-first.
 - Seed useful demo categories and products.
 
 ## Phase 3: Cart
@@ -33,6 +35,7 @@
 - Remove products from cart.
 - Clear cart after successful order.
 - Keep cart totals accurate in the UI.
+- Keep signed-in carts with customer accounts across devices and merge guest carts once after login.
 
 ## Phase 4: Coupons and Pricing
 
@@ -54,8 +57,8 @@
 
 - Store placed orders with session, items, total, address, and status.
 - Show order history by session.
-- Add order tracking status display.
-- Prepare status values for future real-time updates.
+- Track each seller's fulfillment through confirmed, preparing, out for delivery, and delivered.
+- Let sellers provide an ETA and delivery-partner details and show the stored timeline to customers.
 
 ## Phase 7: Seller Dashboard
 
@@ -65,7 +68,17 @@
 - Keep the add-product form in a dedicated left-side panel on desktop.
 - Validate required product fields.
 - Keep non-sellers out of seller routes.
-- Future: edit, delete, stock controls, and seller analytics.
+- Let sellers configure a public name, logo, description, and storefront.
+- Let sellers edit/archive products and manage base or variant stock.
+- Let sellers view their part of multi-seller orders and advance delivery progress.
+- Show product, active-order, delivered-value, and low-stock summaries.
+
+## Phase 7A: Customer Accounts and Reviews
+
+- Let customers update their personal details and manage up to 10 saved addresses.
+- Associate carts and order history with authenticated accounts.
+- Let signed-in customers create or update one review per product, including optional photos.
+- Derive verified-purchase labels from delivered orders and maintain product rating summaries.
 
 ## Phase 8: Hardening
 

@@ -103,7 +103,7 @@ BLinkit/
 - `client/src/context/AuthContext.jsx`: Login session, token storage, current user state.
 - `client/src/context/CartContext.jsx`: Cart state and cart API operations.
 - `client/src/components/Header.jsx`: Navigation, search, auth links, cart entry.
-- `client/src/pages/Home.jsx`: Product browsing, hero banner, visual categories, category rail, search entry.
+- `client/src/pages/Home.jsx`: Product browsing, hero banner, visual categories, category rail, search entry, and search-only advanced filter/sort state.
 - `client/src/pages/Cart.jsx`: Cart item management and summary.
 - `client/src/pages/Checkout.jsx`: Address and payment/order placement.
 - `client/src/pages/SellerDashboard.jsx`: Seller portal with product creation and searchable inventory table.

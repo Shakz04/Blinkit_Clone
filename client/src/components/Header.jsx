@@ -1,89 +1,27 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
+function Search({ value, onSearch }) {
+  const [search, setSearch] = useState(value);
+  return <form className="search-bar" onSubmit={event => { event.preventDefault(); onSearch(search.trim()); }}><input type="search" aria-label="Search products" placeholder="Search products, brands..." value={search} onChange={event => setSearch(event.target.value)} className="search-input" /><button className="search-btn" type="submit">Search</button></form>;
+}
 export default function Header({ onSearch, searchValue }) {
   const { cartCount } = useCart();
   const { user, logout } = useAuth();
-  const [localSearch, setLocalSearch] = useState(searchValue || '');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    onSearch?.(localSearch.trim());
-  };
-
-  return (
-    <header className="header">
-      <div className="header-inner">
-        <Link to="/" className="logo">
-          <span className="logo-mark" aria-hidden="true">B</span>
-          <span className="logo-text">FreshDash</span>
-        </Link>
-
-        <form className="search-bar" onSubmit={handleSearch}>
-          <span className="search-icon" aria-hidden="true">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-          </span>
-          <input
-            type="text"
-            placeholder="Search for groceries..."
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            className="search-input"
-          />
-          <button type="submit" className="search-btn">Search</button>
-        </form>
-
-        <div className="header-actions">
-          <span className="delivery-chip">Delivery in 10 mins</span>
-          {user ? (
-            <div className="user-menu-wrap">
-              <button
-                className="user-btn"
-                onClick={() => setShowMenu(!showMenu)}
-                aria-expanded={showMenu}
-              >
-                <span className="user-avatar" aria-hidden="true">U</span>
-                <span className="user-name">{user.name}</span>
-                {user.role === 'seller' && <span className="role-tag">Seller</span>}
-              </button>
-              {showMenu && (
-                <>
-                  <div className="menu-backdrop" onClick={() => setShowMenu(false)} />
-                  <div className="user-menu">
-                    {user.role === 'seller' && (
-                      <Link to="/seller" onClick={() => setShowMenu(false)}>Seller Dashboard</Link>
-                    )}
-                    <button onClick={() => { logout(); setShowMenu(false); }}>Logout</button>
-                  </div>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="auth-links">
-              <Link to="/login" className="auth-link">Login</Link>
-              <Link to="/register" className="auth-link register">Register</Link>
-            </div>
-          )}
-
-          <Link to="/orders" className="header-link">Orders</Link>
-          <Link to="/cart" className="cart-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-            </svg>
-            <span className="cart-label">Cart</span>
-            <span className="cart-count">{cartCount}</span>
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
+  const initialSearch = searchValue ?? new URLSearchParams(location.search).get('search') ?? '';
+  const search = value => onSearch ? onSearch(value) : navigate('/?' + new URLSearchParams({ search: value }));
+  return <header className="header"><div className="header-inner">
+    <Link to="/" className="logo"><span className="logo-mark" aria-hidden="true">B</span><span className="logo-text">FreshDash</span></Link>
+    <Search key={initialSearch + location.pathname} value={initialSearch} onSearch={search} />
+    <div className="header-actions">
+      {user ? <div className="user-menu-wrap"><button className="user-btn" aria-expanded={showMenu} onClick={() => setShowMenu(!showMenu)}><span className="user-avatar" aria-hidden="true">{user.name[0]}</span><span className="user-name">{user.name}</span>{user.role === 'seller' && <span className="role-tag">Seller</span>}</button>{showMenu && <><button className="menu-backdrop" aria-label="Close account menu" onClick={() => setShowMenu(false)} /><div className="user-menu"><Link to="/profile" onClick={() => setShowMenu(false)}>Profile & addresses</Link>{user.role === 'seller' && <Link to="/seller" onClick={() => setShowMenu(false)}>Seller dashboard</Link>}<button onClick={() => { logout(); setShowMenu(false); navigate('/'); }}>Logout</button></div></>}</div> : <div className="auth-links"><Link to="/login" className="auth-link">Login</Link><Link to="/register" className="auth-link register">Register</Link></div>}
+      <Link to="/orders" className="header-link">Orders</Link><Link to="/cart" className="cart-btn"><span>Cart</span><span className="cart-count">{cartCount}</span></Link>
+    </div>
+  </div></header>;
 }
